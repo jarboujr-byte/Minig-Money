@@ -1,0 +1,12 @@
+{
+  "name": "mine-coins-app",
+  "version": "1.0.0",
+  "description": "Mine Coins Full Node.js Express App",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
