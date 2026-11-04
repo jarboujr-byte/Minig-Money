@@ -5,9 +5,11 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// In-memory Database mock (Temporary storage)
 let users = [];
-let uprgadesData = {}; // track user upgrades
+
+// Admin Credentials requested by user
+const ADMIN_USER = "Jr";
+const ADMIN_PASS = "123123123";
 
 // Generate 40 Bonus Codes between 700 and 2100
 let bonusCodes = {};
@@ -15,16 +17,14 @@ for (let i = 1; i <= 40; i++) {
     const randomCoins = Math.floor(Math.random() * (2100 - 700 + 1)) + 700;
     bonusCodes[`BONUS${i * 50}_${randomCoins}`] = {
         coins: randomCoins,
-        maxUses: 10,
+        maxUses: 1, 
         usedCount: 0,
         claimedBy: []
     };
 }
-// Add some specific popular ones just in case
-bonusCodes["BONUS700"] = { coins: 700, maxUses: 50, usedCount: 0, claimedBy: [] };
-bonusCodes["BONUS2100"] = { coins: 2100, maxUses: 50, usedCount: 0, claimedBy: [] };
+bonusCodes["BONUS700"] = { coins: 700, maxUses: 10, usedCount: 0, claimedBy: [] };
+bonusCodes["BONUS2100"] = { coins: 2100, maxUses: 10, usedCount: 0, claimedBy: [] };
 
-// Register API
 app.post('/api/register', (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -48,7 +48,6 @@ app.post('/api/register', (req, res) => {
     res.json({ success: true, user: newUser });
 });
 
-// Login API
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     const user = users.find(u => u.username === username && u.password === password);
@@ -58,7 +57,34 @@ app.post('/api/login', (req, res) => {
     res.json({ success: true, user });
 });
 
-// Claim Bonus Code API
+app.post('/api/admin/login', (req, res) => {
+    const { username, password } = req.body;
+    if (username === ADMIN_USER && password === ADMIN_PASS) {
+        res.json({ success: true });
+    } else {
+        res.status(401).json({ success: false, message: 'Invalid Admin credentials.' });
+    }
+});
+
+// Buy Miner / Upgrade API
+app.post('/api/buy-miner', (req, res) => {
+    const { username, minerType, cost, rateIncrease } = req.body;
+    const user = users.find(u => u.username === username);
+    if (!user) return res.status(400).json({ success: false, message: 'User not found.' });
+
+    if (user.balance < cost) {
+        return res.status(400).json({ success: false, message: 'Not enough coins!' });
+    }
+
+    user.balance -= cost;
+    user.miningRate += rateIncrease;
+    if (!user.miners[minerType]) user.miners[minerType] = 0;
+    user.miners[minerType]++;
+
+    res.json({ success: true, balance: user.balance, miningRate: user.miningRate, miners: user.miners });
+});
+
+// Claim Bonus Code API (One-time use per user check)
 app.post('/api/claim-bonus', (req, res) => {
     const { username, code } = req.body;
     const user = users.find(u => u.username === username);
@@ -71,24 +97,20 @@ app.post('/api/claim-bonus', (req, res) => {
         return res.status(400).json({ success: false, message: 'Invalid bonus code!' });
     }
     if (bonus.claimedBy.includes(username)) {
-        return res.status(400).json({ success: false, message: 'You already claimed this code!' });
-    }
-    if (bonus.usedCount >= bonus.maxUses) {
-        return res.status(400).json({ success: false, message: 'This bonus code limit has been reached!' });
+        return res.status(400).json({ success: false, message: 'You already claimed this bonus code!' });
     }
 
-    bonus.usedCount++;
     bonus.claimedBy.push(username);
+    bonus.usedCount++;
     user.balance += bonus.coins;
 
     res.json({ success: true, balance: user.balance, added: bonus.coins, message: `Successfully claimed ${bonus.coins} coins!` });
 });
 
-// Admin Panel Data API
 app.get('/api/admin/data', (req, res) => {
     res.json({
         success: true,
-        users: users.map(u => ({ username: u.username, balance: u.balance, miningRate: u.miningRate })),
+        users: users.map(u => ({ username: u.username, balance: u.balance, miningRate: u.miningRate, miners: u.miners })),
         bonusCodes
     });
 });

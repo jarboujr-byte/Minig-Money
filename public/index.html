@@ -7,9 +7,9 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0d1117; color: #c9d1d9; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        header { width: 100%; max-width: 900px; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #161b22; border-radius: 8px; margin-bottom: 25px; border: 1px solid #30363d; }
-        .logo { font-size: 20px; font-weight: bold; color: #58a6ff; display: flex; align-items: center; gap: 8px; }
-        .nav-btns { display: flex; gap: 10px; }
+        header { width: 100%; max-width: 950px; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #161b22; border-radius: 8px; margin-bottom: 25px; border: 1px solid #30363d; }
+        .logo { font-size: 20px; font-weight: bold; color: #58a6ff; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .nav-btns { display: flex; gap: 10px; align-items: center; }
         .btn { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; text-decoration: none; font-size: 14px; transition: 0.2s; }
         .btn:hover { background: #30363d; border-color: #8b949e; }
         .btn-primary { background: #1f6feb; color: #fff; border: none; }
@@ -20,14 +20,17 @@
         .form-group label { display: block; margin-bottom: 6px; font-size: 14px; color: #8b949e; }
         .form-control { width: 100%; padding: 10px 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; font-size: 14px; }
         .form-control:focus { border-color: #58a6ff; outline: none; }
-        .stats-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; max-width: 900px; margin-bottom: 20px; }
+        .stats-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; max-width: 950px; margin-bottom: 20px; }
         .stat-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; text-align: center; }
         .stat-card h3 { font-size: 14px; color: #8b949e; margin-bottom: 8px; }
         .stat-card .value { font-size: 24px; font-weight: bold; color: #58a6ff; }
+        .miners-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; width: 100%; max-width: 950px; margin-bottom: 25px; }
+        .miner-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
         .hidden { display: none !important; }
         .alert { padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; text-align: center; }
         .alert-success { background: rgba(35, 134, 54, 0.2); border: 1px solid #2ea043; color: #3fb950; }
         .alert-error { background: rgba(248, 81, 73, 0.2); border: 1px solid #f85149; color: #f85149; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #30363d; font-size: 14px; }
         th { color: #8b949e; }
@@ -36,15 +39,14 @@
 <body>
 
     <header>
-        <div class="logo">⛏️ MineCoins</div>
+        <div class="logo" onclick="showSection('loginSection')">⛏️ MineCoins</div>
         <div class="nav-btns" id="navContainer">
             <button class="btn" onclick="showSection('loginSection')">Login</button>
             <button class="btn btn-primary" onclick="showSection('registerSection')">Register</button>
-            <button class="btn" onclick="showSection('adminSection')">Admin Panel</button>
+            <button class="btn" onclick="showSection('adminLoginSection')">Admin Panel</button>
         </div>
     </header>
 
-    <!-- REGISTER SECTION -->
     <div id="registerSection" class="card">
         <h2>Register to Mine</h2>
         <div id="regAlert" class="hidden"></div>
@@ -59,7 +61,6 @@
         <button class="btn btn-primary" style="width: 100%; padding: 10px;" onclick="register()">Sign Up</button>
     </div>
 
-    <!-- LOGIN SECTION -->
     <div id="loginSection" class="card hidden">
         <h2>Login to Mine</h2>
         <div id="loginAlert" class="hidden"></div>
@@ -74,8 +75,21 @@
         <button class="btn btn-primary" style="width: 100%; padding: 10px;" onclick="login()">Sign In</button>
     </div>
 
-    <!-- DASHBOARD SECTION -->
-    <div id="dashboardSection" class="hidden" style="width: 100%; max-width: 900px;">
+    <div id="adminLoginSection" class="card hidden">
+        <h2>🔐 Admin Authentication</h2>
+        <div id="adminLoginAlert" class="hidden"></div>
+        <div class="form-group">
+            <label>Admin Username (Jr)</label>
+            <input type="text" id="adminUser" class="form-control" placeholder="Enter admin username">
+        </div>
+        <div class="form-group">
+            <label>Admin Password (123123123)</label>
+            <input type="password" id="adminPass" class="form-control" placeholder="Enter admin password">
+        </div>
+        <button class="btn btn-primary" style="width: 100%; padding: 10px;" onclick="adminLogin()">Access Admin Panel</button>
+    </div>
+
+    <div id="dashboardSection" class="hidden" style="width: 100%; max-width: 950px;">
         <div class="stats-container">
             <div class="stat-card">
                 <h3>Coins Balance</h3>
@@ -86,29 +100,82 @@
                 <div class="value" id="userRate">1 Coins/sec</div>
             </div>
             <div class="stat-card">
-                <h3>Bonus Codes</h3>
-                <div class="value" style="font-size: 16px; color: #3fb950;">Active & Ready</div>
+                <h3>Conversion Rate</h3>
+                <div class="value" style="font-size: 18px; color: #f0f6fc;">50,000 Coins = $1.00</div>
             </div>
         </div>
 
-        <!-- Bonus Section inside Dashboard -->
-        <div class="card" style="max-width: 100%;">
-            <h2>🎁 Claim Bonus Code</h2>
-            <div id="bonusAlert" class="hidden"></div>
-            <div class="form-group">
-                <label>Enter Bonus Code (e.g. BONUS700)</label>
-                <input type="text" id="bonusCodeInput" class="form-control" placeholder="Enter code here...">
+        <div class="card" style="max-width: 100%; text-align: center; margin-bottom: 25px;">
+            <h2 style="margin-bottom: 10px;">Click to Mine Manually</h2>
+            <div style="font-size: 50px; cursor: pointer; margin: 15px 0;" onclick="manualMine()">⛏️</div>
+            <p style="color: #8b949e; font-size: 13px;">Click the pickaxe to earn coins!</p>
+        </div>
+
+        <h2 style="margin-bottom: 15px; color: #f0f6fc;">Hire Workers & Mine Upgrades</h2>
+        <div class="miners-grid">
+            <div class="miner-card">
+                <div>
+                    <div style="font-size: 20px; margin-bottom: 5px;">👨‍🌾 Novice Miner</div>
+                    <div style="color: #3fb950; font-size: 14px; margin-bottom: 10px;">+1 coins/sec</div>
+                    <div style="color: #8b949e; font-size: 13px; margin-bottom: 15px;" id="ownedNovice">Owned: 0</div>
+                </div>
+                <button class="btn btn-primary" onclick="buyMiner('novice', 100, 1)">Buy for 100 Coins</button>
             </div>
-            <button class="btn btn-primary" onclick="claimBonus()">Claim Code</button>
+            <div class="miner-card">
+                <div>
+                    <div style="font-size: 20px; margin-bottom: 5px;">👷 Apprentice Digger</div>
+                    <div style="color: #3fb950; font-size: 14px; margin-bottom: 10px;">+5 coins/sec</div>
+                    <div style="color: #8b949e; font-size: 13px; margin-bottom: 15px;" id="ownedApprentice">Owned: 0</div>
+                </div>
+                <button class="btn btn-primary" onclick="buyMiner('apprentice', 500, 5)">Buy for 500 Coins</button>
+            </div>
+            <div class="miner-card">
+                <div>
+                    <div style="font-size: 20px; margin-bottom: 5px;">⚙️ Steam Drill</div>
+                    <div style="color: #3fb950; font-size: 14px; margin-bottom: 10px;">+25 coins/sec</div>
+                    <div style="color: #8b949e; font-size: 13px; margin-bottom: 15px;" id="ownedDrill">Owned: 0</div>
+                </div>
+                <button class="btn btn-primary" onclick="buyMiner('drill', 2500, 25)">Buy for 2 500 Coins</button>
+            </div>
+            <div class="miner-card">
+                <div>
+                    <div style="font-size: 20px; margin-bottom: 5px;">🚜 Heavy Excavator</div>
+                    <div style="color: #3fb950; font-size: 14px; margin-bottom: 10px;">+120 coins/sec</div>
+                    <div style="color: #8b949e; font-size: 13px; margin-bottom: 15px;" id="ownedExcavator">Owned: 0</div>
+                </div>
+                <button class="btn btn-primary" onclick="buyMiner('excavator', 12500, 120)">Buy for 12 500 Coins</button>
+            </div>
+            <div class="miner-card">
+                <div>
+                    <div style="font-size: 20px; margin-bottom: 5px;">💻 Quantum Rig</div>
+                    <div style="color: #3fb950; font-size: 14px; margin-bottom: 10px;">+650 coins/sec</div>
+                    <div style="color: #8b949e; font-size: 13px; margin-bottom: 15px;" id="ownedQuantum">Owned: 0</div>
+                </div>
+                <button class="btn btn-primary" onclick="buyMiner('quantum', 62500, 650)">Buy for 62 500 Coins</button>
+            </div>
         </div>
     </div>
 
-    <!-- ADMIN PANEL SECTION -->
-    <div id="adminSection" class="card hidden" style="max-width: 900px;">
+    <div id="bonusModal" class="modal hidden">
+        <div class="card" style="max-width: 400px; position: relative;">
+            <h2 style="display: flex; justify-content: space-between; align-items: center;">
+                🎁 Claim Bonus Code
+                <span style="cursor: pointer; font-size: 18px; color: #8b949e;" onclick="toggleBonusModal(false)">&times;</span>
+            </h2>
+            <div id="bonusAlert" class="hidden"></div>
+            <div class="form-group">
+                <label>Enter Bonus Code (One-time use)</label>
+                <input type="text" id="bonusCodeInput" class="form-control" placeholder="Enter code here...">
+            </div>
+            <button class="btn btn-primary" style="width: 100%; padding: 10px;" onclick="claimBonus()">Claim Code</button>
+        </div>
+    </div>
+
+    <div id="adminSection" class="card hidden" style="max-width: 950px;">
         <h2>🛠️ Admin Panel - Bonus Codes & Users</h2>
-        <p style="margin-bottom: 15px; color: #8b949e; font-size: 13px;">Manage active bonus codes (700 to 2100 range) and player stats.</p>
+        <p style="margin-bottom: 15px; color: #8b949e; font-size: 13px;">Manage bonus codes (700 to 2100) and player stats.</p>
         <div style="overflow-x: auto;">
-            <h3>Active Bonus Codes (40 Codes)</h3>
+            <h3>Active Bonus Codes</h3>
             <div id="adminBonusList" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
             <h3>Registered Users</h3>
             <div id="adminUsersList"></div>
@@ -121,13 +188,29 @@
         function showSection(sectionId) {
             document.getElementById('registerSection').classList.add('hidden');
             document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('adminLoginSection').classList.add('hidden');
             document.getElementById('dashboardSection').classList.add('hidden');
             document.getElementById('adminSection').classList.add('hidden');
-
-            if(sectionId === 'adminSection') {
-                loadAdminData();
-            }
             document.getElementById(sectionId).classList.remove('hidden');
+        }
+
+        function toggleBonusModal(show) {
+            const modal = document.getElementById('bonusModal');
+            if(show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        }
+
+        setInterval(() => {
+            if (currentUser) {
+                currentUser.balance += (currentUser.miningRate / 10);
+                document.getElementById('userBalance').innerText = Math.floor(currentUser.balance);
+            }
+        }, 100);
+
+        function manualMine() {
+            if (!currentUser) return;
+            currentUser.balance += 1;
+            document.getElementById('userBalance').innerText = Math.floor(currentUser.balance);
         }
 
         async function register() {
@@ -164,13 +247,40 @@
             alertBox.classList.remove('hidden');
             if(data.success) {
                 currentUser = data.user;
-                document.getElementById('userBalance').innerText = currentUser.balance;
+                document.getElementById('userBalance').innerText = Math.floor(currentUser.balance);
+                document.getElementById('userRate').innerText = `${currentUser.miningRate} Coins/sec`;
                 document.getElementById('navContainer').innerHTML = `
-                    <span style="align-self: center; font-size: 14px; color: #58a6ff;">User: ${currentUser.username}</span>
+                    <button class="btn btn-primary" onclick="toggleBonusModal(true)">Bonus</button>
+                    <span style="font-size: 14px; color: #58a6ff;">User: ${currentUser.username}</span>
                     <button class="btn" onclick="logout()">Logout</button>
-                    <button class="btn" onclick="showSection('adminSection')">Admin Panel</button>
+                    <button class="btn" onclick="showSection('adminLoginSection')">Admin Panel</button>
                 `;
                 showSection('dashboardSection');
+            } else {
+                alertBox.className = 'alert alert-error';
+                alertBox.innerText = data.message;
+            }
+        }
+
+        async function adminLogin() {
+            const username = document.getElementById('adminUser').value;
+            const password = document.getElementById('adminPass').value;
+            const res = await fetch('/api/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            const alertBox = document.getElementById('adminLoginAlert');
+            alertBox.classList.remove('hidden');
+            if(data.success) {
+                alertBox.className = 'alert alert-success';
+                alertBox.innerText = 'Access granted! Loading Admin Panel...';
+                setTimeout(() => {
+                    loadAdminData();
+                    document.getElementById('adminSection').classList.remove('hidden');
+                    document.getElementById('adminLoginSection').classList.add('hidden');
+                }, 1000);
             } else {
                 alertBox.className = 'alert alert-error';
                 alertBox.innerText = data.message;
@@ -182,13 +292,38 @@
             document.getElementById('navContainer').innerHTML = `
                 <button class="btn" onclick="showSection('loginSection')">Login</button>
                 <button class="btn btn-primary" onclick="showSection('registerSection')">Register</button>
-                <button class="btn" onclick="showSection('adminSection')">Admin Panel</button>
+                <button class="btn" onclick="showSection('adminLoginSection')">Admin Panel</button>
             `;
             showSection('loginSection');
         }
 
+        async function buyMiner(minerType, cost, rateIncrease) {
+            if(!currentUser) return;
+            const res = await fetch('/api/buy-miner', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser.username, minerType, cost, rateIncrease })
+            });
+            const data = await res.json();
+            if(data.success) {
+                currentUser.balance = data.balance;
+                currentUser.miningRate = data.miningRate;
+                currentUser.miners = data.miners;
+                document.getElementById('userBalance').innerText = Math.floor(currentUser.balance);
+                document.getElementById('userRate').innerText = `${currentUser.miningRate} Coins/sec`;
+                
+                if(minerType === 'novice') document.getElementById('ownedNovice').innerText = `Owned: ${currentUser.miners.novice}`;
+                if(minerType === 'apprentice') document.getElementById('ownedApprentice').innerText = `Owned: ${currentUser.miners.apprentice}`;
+                if(minerType === 'drill') document.getElementById('ownedDrill').innerText = `Owned: ${currentUser.miners.drill}`;
+                if(minerType === 'excavator') document.getElementById('ownedExcavator').innerText = `Owned: ${currentUser.miners.excavator}`;
+                if(minerType === 'quantum') document.getElementById('ownedQuantum').innerText = `Owned: ${currentUser.miners.quantum}`;
+            } else {
+                alert(data.message);
+            }
+        }
+
         async function claimBonus() {
-            if(!currentUser) return alert('Please login first!');
+            if(!currentUser) return;
             const code = document.getElementById('bonusCodeInput').value;
             const res = await fetch('/api/claim-bonus', {
                 method: 'POST',
@@ -200,9 +335,10 @@
             alertBox.classList.remove('hidden');
             if(data.success) {
                 currentUser.balance = data.balance;
-                document.getElementById('userBalance').innerText = currentUser.balance;
+                document.getElementById('userBalance').innerText = Math.floor(currentUser.balance);
                 alertBox.className = 'alert alert-success';
-                alertBox.innerText = `🎉 ${data.message} New Balance: ${data.balance} Coins`;
+                alertBox.innerText = `🎉 ${data.message}`;
+                setTimeout(() => toggleBonusModal(false), 1500);
             } else {
                 alertBox.className = 'alert alert-error';
                 alertBox.innerText = data.message;
@@ -213,18 +349,16 @@
             const res = await fetch('/api/admin/data');
             const data = await res.json();
             if(data.success) {
-                // Bonus codes table
                 let bonusHtml = `<table><tr><th>Code</th><th>Coins</th><th>Uses</th></tr>`;
                 for(let [code, info] of Object.entries(data.bonusCodes)) {
-                    bonusHtml += `<tr><td><b>${code}</b></td><td>${info.coins}</td><td>${info.usedCount}/${info.maxUses}</td></tr>`;
+                    bonusHtml += `<tr><td><b>${code}</b></td><td>${info.coins}</td><td>${info.usedCount}</td></tr>`;
                 }
                 bonusHtml += `</table>`;
                 document.getElementById('adminBonusList').innerHTML = bonusHtml;
 
-                // Users table
                 let usersHtml = `<table><tr><th>Username</th><th>Balance</th><th>Mining Rate</th></tr>`;
                 data.users.forEach(u => {
-                    usersHtml += `<tr><td>${u.username}</td><td>${u.balance}</td><td>${u.miningRate}</td></tr>`;
+                    usersHtml += `<tr><td>${u.username}</td><td>${Math.floor(u.balance)}</td><td>${u.miningRate}</td></tr>`;
                 });
                 usersHtml += `</table>`;
                 document.getElementById('adminUsersList').innerHTML = usersHtml;
