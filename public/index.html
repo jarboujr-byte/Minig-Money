@@ -79,11 +79,11 @@
         <h2>🔐 Admin Authentication</h2>
         <div id="adminLoginAlert" class="hidden"></div>
         <div class="form-group">
-            <label>Admin Username (Jr)</label>
+            <label>Admin Username</label>
             <input type="text" id="adminUser" class="form-control" placeholder="Enter admin username">
         </div>
         <div class="form-group">
-            <label>Admin Password (123123123)</label>
+            <label>Admin Password</label>
             <input type="password" id="adminPass" class="form-control" placeholder="Enter admin password">
         </div>
         <button class="btn btn-primary" style="width: 100%; padding: 10px;" onclick="adminLogin()">Access Admin Panel</button>
@@ -164,18 +164,18 @@
             </h2>
             <div id="bonusAlert" class="hidden"></div>
             <div class="form-group">
-                <label>Enter Bonus Code (One-time use)</label>
-                <input type="text" id="bonusCodeInput" class="form-control" placeholder="Enter code here...">
+                <label>Enter Secure Bonus Code</label>
+                <input type="text" id="bonusCodeInput" class="form-control" placeholder="e.g. MINE-A1B2-1500">
             </div>
             <button class="btn btn-primary" style="width: 100%; padding: 10px;" onclick="claimBonus()">Claim Code</button>
         </div>
     </div>
 
     <div id="adminSection" class="card hidden" style="max-width: 950px;">
-        <h2>🛠️ Admin Panel - Bonus Codes & Users</h2>
-        <p style="margin-bottom: 15px; color: #8b949e; font-size: 13px;">Manage bonus codes (700 to 2100) and player stats.</p>
+        <h2>🛠️ Admin Panel - Secure Bonus Codes & Users</h2>
+        <p style="margin-bottom: 15px; color: #8b949e; font-size: 13px;">Manage complex encrypted-style bonus codes and player stats.</p>
         <div style="overflow-x: auto;">
-            <h3>Active Bonus Codes</h3>
+            <h3>Active Secure Bonus Codes</h3>
             <div id="adminBonusList" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
             <h3>Registered Users</h3>
             <div id="adminUsersList"></div>
@@ -349,7 +349,7 @@
             const res = await fetch('/api/admin/data');
             const data = await res.json();
             if(data.success) {
-                let bonusHtml = `<table><tr><th>Code</th><th>Coins</th><th>Uses</th></tr>`;
+                let bonusHtml = `<table><tr><th>Secure Code</th><th>Coins</th><th>Uses</th></tr>`;
                 for(let [code, info] of Object.entries(data.bonusCodes)) {
                     bonusHtml += `<tr><td><b>${code}</b></td><td>${info.coins}</td><td>${info.usedCount}</td></tr>`;
                 }
