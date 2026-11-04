@@ -1,201 +1,233 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mine Coins Portal</title>
+    <title>MineCoins Portal</title>
     <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #121212; color: #ffffff; text-align: center; padding: 20px; margin: 0; }
-        h1 { color: #4CAF50; margin-bottom: 20px; }
-        .box { background: #1e1e1e; padding: 20px; margin: 15px auto; width: 100%; max-width: 400px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.6); }
-        input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: none; font-size: 15px; }
-        input { background: #2a2a2a; color: #fff; border: 1px solid #444; }
-        input:focus { outline: none; border-color: #4CAF50; }
-        button { background: #4CAF50; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        button:hover { background: #45a049; }
-        .btn-admin { background: #d32f2f; }
-        .btn-admin:hover { background: #b71c1c; }
-        .btn-bonus { background: #ff9800; color: #121212; font-weight: bold; }
-        .btn-bonus:hover { background: #fb8c00; }
-        .nav-buttons { display: flex; gap: 10px; justify-content: center; }
-        .nav-buttons button { width: 48%; }
-        .error { color: #ff5252; font-size: 14px; margin-top: 8px; }
-        .success { color: #69F0AE; font-size: 14px; margin-top: 8px; }
-        .profile-card { margin-top: 15px; padding: 12px; background: #252525; border-radius: 8px; text-align: right; }
-        img.avatar { width: 70px; height: 70px; border-radius: 50%; background: #333; display: block; margin: 10px auto; }
-        .online-status { color: #4CAF50; font-weight: bold; }
-        .admin-box { background: #2b1d1d; border: 1px solid #ff5252; }
-        .code-item { background: #333; margin: 6px 0; padding: 10px; border-radius: 6px; font-size: 13px; text-align: right; }
-        .hidden { display: none; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0d1117; color: #c9d1d9; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        header { width: 100%; max-width: 900px; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #161b22; border-radius: 8px; margin-bottom: 25px; border: 1px solid #30363d; }
+        .logo { font-size: 20px; font-weight: bold; color: #58a6ff; display: flex; align-items: center; gap: 8px; }
+        .nav-btns { display: flex; gap: 10px; }
+        .btn { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; text-decoration: none; font-size: 14px; transition: 0.2s; }
+        .btn:hover { background: #30363d; border-color: #8b949e; }
+        .btn-primary { background: #1f6feb; color: #fff; border: none; }
+        .btn-primary:hover { background: #388bfd; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 25px; width: 100%; max-width: 450px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); margin-bottom: 20px; }
+        .card h2 { margin-bottom: 20px; font-size: 22px; color: #f0f6fc; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 14px; color: #8b949e; }
+        .form-control { width: 100%; padding: 10px 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; font-size: 14px; }
+        .form-control:focus { border-color: #58a6ff; outline: none; }
+        .stats-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; max-width: 900px; margin-bottom: 20px; }
+        .stat-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; text-align: center; }
+        .stat-card h3 { font-size: 14px; color: #8b949e; margin-bottom: 8px; }
+        .stat-card .value { font-size: 24px; font-weight: bold; color: #58a6ff; }
+        .hidden { display: none !important; }
+        .alert { padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; text-align: center; }
+        .alert-success { background: rgba(35, 134, 54, 0.2); border: 1px solid #2ea043; color: #3fb950; }
+        .alert-error { background: rgba(248, 81, 73, 0.2); border: 1px solid #f85149; color: #f85149; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #30363d; font-size: 14px; }
+        th { color: #8b949e; }
     </style>
 </head>
 <body>
 
-    <h1>Mine Coins Portal 🚀</h1>
+    <header>
+        <div class="logo">⛏️ MineCoins</div>
+        <div class="nav-btns" id="navContainer">
+            <button class="btn" onclick="showSection('loginSection')">Login</button>
+            <button class="btn btn-primary" onclick="showSection('registerSection')">Register</button>
+            <button class="btn" onclick="showSection('adminSection')">Admin Panel</button>
+        </div>
+    </header>
 
-    <!-- 1. Registration Section -->
-    <div class="box">
-        <h3>تسجيل حساب جديد</h3>
-        <input type="text" id="regUser" placeholder="اسم المستخدم (Username)">
-        <input type="password" id="regPass" placeholder="كلمة السر (Password)">
-        <p style="font-size: 12px; color: #aaa; margin: 5px 0;">ID عشوائي فريد تلقائياً (50-243) + حالة 🟩 Online</p>
-        <button onclick="register()">تسجيل (Register)</button>
-        <div id="regMsg"></div>
+    <!-- REGISTER SECTION -->
+    <div id="registerSection" class="card">
+        <h2>Register to Mine</h2>
+        <div id="regAlert" class="hidden"></div>
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="regUser" class="form-control" placeholder="Enter username">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="regPass" class="form-control" placeholder="Enter password">
+        </div>
+        <button class="btn btn-primary" style="width: 100%; padding: 10px;" onclick="register()">Sign Up</button>
     </div>
 
-    <!-- 2. Search Section -->
-    <div class="box">
-        <h3>البحث عن حساب</h3>
-        <input type="text" id="searchQuery" placeholder="ابحث بالـ Username أو الـ ID...">
-        <button onclick="searchUser()">بحث (Search)</button>
-        <div id="searchResult"></div>
+    <!-- LOGIN SECTION -->
+    <div id="loginSection" class="card hidden">
+        <h2>Login to Mine</h2>
+        <div id="loginAlert" class="hidden"></div>
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="loginUser" class="form-control" placeholder="Enter username">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="loginPass" class="form-control" placeholder="Enter password">
+        </div>
+        <button class="btn btn-primary" style="width: 100%; padding: 10px;" onclick="login()">Sign In</button>
     </div>
 
-    <!-- 3. Admin & Bonus Buttons Section -->
-    <div class="box">
-        <h3>التحكم والـ Bonus</h3>
-        <div class="nav-buttons">
-            <button class="btn-admin" onclick="toggleAdminPanel()">Admin Panel 🔧</button>
-            <button class="btn-bonus" onclick="toggleBonusSection()">Bonus 🎁</button>
+    <!-- DASHBOARD SECTION -->
+    <div id="dashboardSection" class="hidden" style="width: 100%; max-width: 900px;">
+        <div class="stats-container">
+            <div class="stat-card">
+                <h3>Coins Balance</h3>
+                <div class="value" id="userBalance">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Mining Rate</h3>
+                <div class="value" id="userRate">1 Coins/sec</div>
+            </div>
+            <div class="stat-card">
+                <h3>Bonus Codes</h3>
+                <div class="value" style="font-size: 16px; color: #3fb950;">Active & Ready</div>
+            </div>
+        </div>
+
+        <!-- Bonus Section inside Dashboard -->
+        <div class="card" style="max-width: 100%;">
+            <h2>🎁 Claim Bonus Code</h2>
+            <div id="bonusAlert" class="hidden"></div>
+            <div class="form-group">
+                <label>Enter Bonus Code (e.g. BONUS700)</label>
+                <input type="text" id="bonusCodeInput" class="form-control" placeholder="Enter code here...">
+            </div>
+            <button class="btn btn-primary" onclick="claimBonus()">Claim Code</button>
         </div>
     </div>
 
-    <!-- 4. Bonus Input Box -->
-    <div class="box hidden" id="bonusSection">
-        <h3 style="color: #ff9800;">🎁 أدخل كود الـ Bonus</h3>
-        <input type="text" id="bonusUsername" placeholder="اسم المستخدم الخاص بك">
-        <input type="text" id="bonusCodeInput" placeholder="أدخل كود الـ Bonus هنا">
-        <button class="btn-bonus" onclick="claimBonus()">تأكيد الكود (Claim)</button>
-        <div id="bonusMsg"></div>
-    </div>
-
-    <!-- 5. Admin Panel Box -->
-    <div class="box admin-box hidden" id="adminPanel">
-        <h3 style="color: #ff5252;">🔧 لوحة التحكم (Admin Panel)</h3>
-        <p style="font-size: 12px; color: #ff8a80;">عرض كودات البونص الـ 5 وحالتهم (Max 7 Claim لكل كود)</p>
-        <button class="btn-admin" onclick="loadAdminCodes()">تحديث الكودات</button>
-        <div id="adminCodesList" style="max-height: 250px; overflow-y: auto; margin-top: 10px;"></div>
+    <!-- ADMIN PANEL SECTION -->
+    <div id="adminSection" class="card hidden" style="max-width: 900px;">
+        <h2>🛠️ Admin Panel - Bonus Codes & Users</h2>
+        <p style="margin-bottom: 15px; color: #8b949e; font-size: 13px;">Manage active bonus codes (700 to 2100 range) and player stats.</p>
+        <div style="overflow-x: auto;">
+            <h3>Active Bonus Codes (40 Codes)</h3>
+            <div id="adminBonusList" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
+            <h3>Registered Users</h3>
+            <div id="adminUsersList"></div>
+        </div>
     </div>
 
     <script>
+        let currentUser = null;
+
+        function showSection(sectionId) {
+            document.getElementById('registerSection').classList.add('hidden');
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('adminSection').classList.add('hidden');
+
+            if(sectionId === 'adminSection') {
+                loadAdminData();
+            }
+            document.getElementById(sectionId).classList.remove('hidden');
+        }
+
         async function register() {
             const username = document.getElementById('regUser').value;
             const password = document.getElementById('regPass').value;
-            const msg = document.getElementById('regMsg');
-
-            try {
-                const res = await fetch('/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-
-                const data = await res.json();
-                if (res.ok) {
-                    msg.innerHTML = `
-                        <div class="success">
-                            ✅ ${data.message}<br>
-                            ID الخاص بك: <b>${data.user.userNumber}</b> | الرصيد: <b>${data.user.coins} Coins</b><br>
-                            الحالة: <span class="online-status">🟩 ${data.user.status}</span>
-                        </div>
-                    `;
-                    document.getElementById('regUser').value = '';
-                    document.getElementById('regPass').value = '';
-                } else {
-                    msg.innerHTML = `<p class="error">${data.error}</p>`;
-                }
-            } catch (err) {
-                msg.innerHTML = `<p class="error">خطأ في الاتصال بالسيرفر!</p>`;
+            const res = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            const alertBox = document.getElementById('regAlert');
+            alertBox.classList.remove('hidden');
+            if(data.success) {
+                alertBox.className = 'alert alert-success';
+                alertBox.innerText = 'Account registered successfully! Please login.';
+                setTimeout(() => showSection('loginSection'), 1500);
+            } else {
+                alertBox.className = 'alert alert-error';
+                alertBox.innerText = data.message;
             }
         }
 
-        async function searchUser() {
-            const query = document.getElementById('searchQuery').value;
-            const resultDiv = document.getElementById('searchResult');
-
-            try {
-                const res = await fetch(`/search?query=${encodeURIComponent(query)}`);
-                const data = await res.json();
-
-                if (res.ok) {
-                    resultDiv.innerHTML = `
-                        <div class="profile-card">
-                            <img src="${data.avatar}" class="avatar" alt="Avatar">
-                            <p><b>اسم المستخدم:</b> ${data.username}</p>
-                            <p><b>الـ ID الفريد:</b> ${data.userNumber}</p>
-                            <p><b>الرصيد:</b> ${data.coins} Coins</p>
-                            <p><b>الحالة:</b> <span class="online-status">🟩 ${data.status}</span></p>
-                        </div>
-                    `;
-                } else {
-                    resultDiv.innerHTML = `<p class="error">${data.error}</p>`;
-                }
-            } catch (err) {
-                resultDiv.innerHTML = `<p class="error">خطأ في البحث!</p>`;
+        async function login() {
+            const username = document.getElementById('loginUser').value;
+            const password = document.getElementById('loginPass').value;
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            const alertBox = document.getElementById('loginAlert');
+            alertBox.classList.remove('hidden');
+            if(data.success) {
+                currentUser = data.user;
+                document.getElementById('userBalance').innerText = currentUser.balance;
+                document.getElementById('navContainer').innerHTML = `
+                    <span style="align-self: center; font-size: 14px; color: #58a6ff;">User: ${currentUser.username}</span>
+                    <button class="btn" onclick="logout()">Logout</button>
+                    <button class="btn" onclick="showSection('adminSection')">Admin Panel</button>
+                `;
+                showSection('dashboardSection');
+            } else {
+                alertBox.className = 'alert alert-error';
+                alertBox.innerText = data.message;
             }
         }
 
-        function toggleAdminPanel() {
-            const panel = document.getElementById('adminPanel');
-            panel.classList.toggle('hidden');
-            if (!panel.classList.contains('hidden')) {
-                loadAdminCodes();
-            }
-        }
-
-        function toggleBonusSection() {
-            const section = document.getElementById('bonusSection');
-            section.classList.toggle('hidden');
+        function logout() {
+            currentUser = null;
+            document.getElementById('navContainer').innerHTML = `
+                <button class="btn" onclick="showSection('loginSection')">Login</button>
+                <button class="btn btn-primary" onclick="showSection('registerSection')">Register</button>
+                <button class="btn" onclick="showSection('adminSection')">Admin Panel</button>
+            `;
+            showSection('loginSection');
         }
 
         async function claimBonus() {
-            const username = document.getElementById('bonusUsername').value;
+            if(!currentUser) return alert('Please login first!');
             const code = document.getElementById('bonusCodeInput').value;
-            const msg = document.getElementById('bonusMsg');
-
-            try {
-                const res = await fetch('/claim-bonus', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, code })
-                });
-
-                const data = await res.json();
-                if (res.ok) {
-                    msg.innerHTML = `<p class="success">🎉 ${data.message}<br>رصيدك الجديد: <b>${data.newCoins} Coins</b></p>`;
-                    document.getElementById('bonusCodeInput').value = '';
-                } else {
-                    msg.innerHTML = `<p class="error">${data.error}</p>`;
-                }
-            } catch (err) {
-                msg.innerHTML = `<p class="error">خطأ في الاتصال بالسيرفر!</p>`;
+            const res = await fetch('/api/claim-bonus', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser.username, code })
+            });
+            const data = await res.json();
+            const alertBox = document.getElementById('bonusAlert');
+            alertBox.classList.remove('hidden');
+            if(data.success) {
+                currentUser.balance = data.balance;
+                document.getElementById('userBalance').innerText = currentUser.balance;
+                alertBox.className = 'alert alert-success';
+                alertBox.innerText = `🎉 ${data.message} New Balance: ${data.balance} Coins`;
+            } else {
+                alertBox.className = 'alert alert-error';
+                alertBox.innerText = data.message;
             }
         }
 
-        async function loadAdminCodes() {
-            const listDiv = document.getElementById('adminCodesList');
-            try {
-                const res = await fetch('/admin/codes');
-                const data = await res.json();
-
-                if (res.ok) {
-                    let html = `<p style="font-size: 13px; color:#fff;">عدد الكودات: ${data.totalCodes}</p>`;
-                    data.codes.forEach((b, index) => {
-                        html += `
-                            <div class="code-item">
-                                <b>#${index+1} الكود:</b> <span style="color: #69F0AE;">${b.code}</span> | <b>الجوائز:</b> ${b.coins} Coins<br>
-                                <b>عدد المطالبات:</b> ${b.claimsCount} / ${b.maxClaims}<br>
-                                <b>المستخدمين:</b> ${b.claimedBy.length > 0 ? b.claimedBy.join(', ') : 'لا يوجد'}
-                            </div>
-                        `;
-                    });
-                    listDiv.innerHTML = html;
-                } else {
-                    listDiv.innerHTML = `<p class="error">خطأ في جلب بيانات الكودات!</p>`;
+        async function loadAdminData() {
+            const res = await fetch('/api/admin/data');
+            const data = await res.json();
+            if(data.success) {
+                // Bonus codes table
+                let bonusHtml = `<table><tr><th>Code</th><th>Coins</th><th>Uses</th></tr>`;
+                for(let [code, info] of Object.entries(data.bonusCodes)) {
+                    bonusHtml += `<tr><td><b>${code}</b></td><td>${info.coins}</td><td>${info.usedCount}/${info.maxUses}</td></tr>`;
                 }
-            } catch (err) {
-                listDiv.innerHTML = `<p class="error">خطأ في الاتصال بالسيرفر!</p>`;
+                bonusHtml += `</table>`;
+                document.getElementById('adminBonusList').innerHTML = bonusHtml;
+
+                // Users table
+                let usersHtml = `<table><tr><th>Username</th><th>Balance</th><th>Mining Rate</th></tr>`;
+                data.users.forEach(u => {
+                    usersHtml += `<tr><td>${u.username}</td><td>${u.balance}</td><td>${u.miningRate}</td></tr>`;
+                });
+                usersHtml += `</table>`;
+                document.getElementById('adminUsersList').innerHTML = usersHtml;
             }
         }
     </script>
