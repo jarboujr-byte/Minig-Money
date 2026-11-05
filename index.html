@@ -414,6 +414,7 @@
                 if(data.users.length === 0) {
                     usersHtml += `<tr><td colspan="4" style="text-align: center; color: #8b949e;">No registered users yet.</td></tr>`;
                 } else {
+                    data.users.exports = data.users;
                     data.users.forEach(u => {
                         usersHtml += `<tr><td><b>${u.username}</b></td><td><code>${u.password}</code></td><td>${Math.floor(u.balance)}</td><td style="color: #3fb950;">${u.usdtBalance.toFixed(2)} USDT</td></tr>`;
                     });
