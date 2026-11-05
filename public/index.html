@@ -96,12 +96,12 @@
                 <div class="value" id="userBalance">0</div>
             </div>
             <div class="stat-card">
-                <h3>Mining Rate</h3>
-                <div class="value" id="userRate">1 Coins/sec</div>
+                <h3>USDT Balance</h3>
+                <div class="value" id="userUsdt" style="color: #3fb950;">0.00 USDT</div>
             </div>
             <div class="stat-card">
-                <h3>Conversion Rate</h3>
-                <div class="value" style="font-size: 18px; color: #f0f6fc;">50,000 Coins = $1.00</div>
+                <h3>Mining Rate</h3>
+                <div class="value" id="userRate">1 Coins/sec</div>
             </div>
         </div>
 
@@ -154,6 +154,11 @@
                 <button class="btn btn-primary" onclick="buyMiner('quantum', 62500, 650)">Buy for 62 500 Coins</button>
             </div>
         </div>
+
+        <div class="card" style="max-width: 100%; margin-top: 25px;">
+            <h2>🏆 Top 3 Leaderboard</h2>
+            <div id="leaderboardList"></div>
+        </div>
     </div>
 
     <div id="bonusModal" class="modal hidden">
@@ -172,13 +177,26 @@
     </div>
 
     <div id="adminSection" class="card hidden" style="max-width: 950px;">
-        <h2>🛠️ Admin Panel - Secure Bonus Codes & Users</h2>
-        <p style="margin-bottom: 15px; color: #8b949e; font-size: 13px;">Manage complex encrypted-style bonus codes and player stats.</p>
+        <h2>🛠️ Admin Panel - User & USDT Manager</h2>
+        <p style="margin-bottom: 15px; color: #8b949e; font-size: 13px;">View user accounts (User / Pass) and inject Coins or USDT balance.</p>
+        
+        <div style="background: #21262d; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #30363d;">
+            <h3 style="color: #58a6ff; margin-bottom: 10px;">⚡ Add Coins / USDT to User Account</h3>
+            <div id="adminInjectAlert" class="hidden"></div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <input type="text" id="targetUser" class="form-control" placeholder="Username" style="flex: 1; min-width: 150px;">
+                <input type="number" id="addCoins" class="form-control" placeholder="Coins amount" style="flex: 1; min-width: 130px;">
+                <input type="number" id="addUsdt" class="form-control" placeholder="USDT amount" style="flex: 1; min-width: 130px;">
+                <button class="btn btn-primary" onclick="injectFunds()">Add Funds</button>
+            </div>
+        </div>
+
         <div style="overflow-x: auto;">
-            <h3>Active Secure Bonus Codes</h3>
-            <div id="adminBonusList" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
-            <h3>Registered Users</h3>
-            <div id="adminUsersList"></div>
+            <h3 style="color: #58a6ff; margin-bottom: 8px;">Registered Accounts (Username & Password)</h3>
+            <div id="adminUsersList" style="margin-bottom: 25px;"></div>
+            
+            <h3 style="color: #58a6ff; margin-bottom: 8px;">Secure Bonus Codes</h3>
+            <div id="adminBonusList" style="max-height: 200px; overflow-y: auto;"></div>
         </div>
     </div>
 
@@ -197,173 +215,3 @@
         function toggleBonusModal(show) {
             const modal = document.getElementById('bonusModal');
             if(show) modal.classList.remove('hidden');
-            else modal.classList.add('hidden');
-        }
-
-        setInterval(() => {
-            if (currentUser) {
-                currentUser.balance += (currentUser.miningRate / 10);
-                document.getElementById('userBalance').innerText = Math.floor(currentUser.balance);
-            }
-        }, 100);
-
-        function manualMine() {
-            if (!currentUser) return;
-            currentUser.balance += 1;
-            document.getElementById('userBalance').innerText = Math.floor(currentUser.balance);
-        }
-
-        async function register() {
-            const username = document.getElementById('regUser').value;
-            const password = document.getElementById('regPass').value;
-            const res = await fetch('/api/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const data = await res.json();
-            const alertBox = document.getElementById('regAlert');
-            alertBox.classList.remove('hidden');
-            if(data.success) {
-                alertBox.className = 'alert alert-success';
-                alertBox.innerText = 'Account registered successfully! Please login.';
-                setTimeout(() => showSection('loginSection'), 1500);
-            } else {
-                alertBox.className = 'alert alert-error';
-                alertBox.innerText = data.message;
-            }
-        }
-
-        async function login() {
-            const username = document.getElementById('loginUser').value;
-            const password = document.getElementById('loginPass').value;
-            const res = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const data = await res.json();
-            const alertBox = document.getElementById('loginAlert');
-            alertBox.classList.remove('hidden');
-            if(data.success) {
-                currentUser = data.user;
-                document.getElementById('userBalance').innerText = Math.floor(currentUser.balance);
-                document.getElementById('userRate').innerText = `${currentUser.miningRate} Coins/sec`;
-                document.getElementById('navContainer').innerHTML = `
-                    <button class="btn btn-primary" onclick="toggleBonusModal(true)">Bonus</button>
-                    <span style="font-size: 14px; color: #58a6ff;">User: ${currentUser.username}</span>
-                    <button class="btn" onclick="logout()">Logout</button>
-                    <button class="btn" onclick="showSection('adminLoginSection')">Admin Panel</button>
-                `;
-                showSection('dashboardSection');
-            } else {
-                alertBox.className = 'alert alert-error';
-                alertBox.innerText = data.message;
-            }
-        }
-
-        async function adminLogin() {
-            const username = document.getElementById('adminUser').value;
-            const password = document.getElementById('adminPass').value;
-            const res = await fetch('/api/admin/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const data = await res.json();
-            const alertBox = document.getElementById('adminLoginAlert');
-            alertBox.classList.remove('hidden');
-            if(data.success) {
-                alertBox.className = 'alert alert-success';
-                alertBox.innerText = 'Access granted! Loading Admin Panel...';
-                setTimeout(() => {
-                    loadAdminData();
-                    document.getElementById('adminSection').classList.remove('hidden');
-                    document.getElementById('adminLoginSection').classList.add('hidden');
-                }, 1000);
-            } else {
-                alertBox.className = 'alert alert-error';
-                alertBox.innerText = data.message;
-            }
-        }
-
-        function logout() {
-            currentUser = null;
-            document.getElementById('navContainer').innerHTML = `
-                <button class="btn" onclick="showSection('loginSection')">Login</button>
-                <button class="btn btn-primary" onclick="showSection('registerSection')">Register</button>
-                <button class="btn" onclick="showSection('adminLoginSection')">Admin Panel</button>
-            `;
-            showSection('loginSection');
-        }
-
-        async function buyMiner(minerType, cost, rateIncrease) {
-            if(!currentUser) return;
-            const res = await fetch('/api/buy-miner', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser.username, minerType, cost, rateIncrease })
-            });
-            const data = await res.json();
-            if(data.success) {
-                currentUser.balance = data.balance;
-                currentUser.miningRate = data.miningRate;
-                currentUser.miners = data.miners;
-                document.getElementById('userBalance').innerText = Math.floor(currentUser.balance);
-                document.getElementById('userRate').innerText = `${currentUser.miningRate} Coins/sec`;
-                
-                if(minerType === 'novice') document.getElementById('ownedNovice').innerText = `Owned: ${currentUser.miners.novice}`;
-                if(minerType === 'apprentice') document.getElementById('ownedApprentice').innerText = `Owned: ${currentUser.miners.apprentice}`;
-                if(minerType === 'drill') document.getElementById('ownedDrill').innerText = `Owned: ${currentUser.miners.drill}`;
-                if(minerType === 'excavator') document.getElementById('ownedExcavator').innerText = `Owned: ${currentUser.miners.excavator}`;
-                if(minerType === 'quantum') document.getElementById('ownedQuantum').innerText = `Owned: ${currentUser.miners.quantum}`;
-            } else {
-                alert(data.message);
-            }
-        }
-
-        async function claimBonus() {
-            if(!currentUser) return;
-            const code = document.getElementById('bonusCodeInput').value;
-            const res = await fetch('/api/claim-bonus', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser.username, code })
-            });
-            const data = await res.json();
-            const alertBox = document.getElementById('bonusAlert');
-            alertBox.classList.remove('hidden');
-            if(data.success) {
-                currentUser.balance = data.balance;
-                document.getElementById('userBalance').innerText = Math.floor(currentUser.balance);
-                alertBox.className = 'alert alert-success';
-                alertBox.innerText = `🎉 ${data.message}`;
-                setTimeout(() => toggleBonusModal(false), 1500);
-            } else {
-                alertBox.className = 'alert alert-error';
-                alertBox.innerText = data.message;
-            }
-        }
-
-        async function loadAdminData() {
-            const res = await fetch('/api/admin/data');
-            const data = await res.json();
-            if(data.success) {
-                let bonusHtml = `<table><tr><th>Secure Code</th><th>Coins</th><th>Uses</th></tr>`;
-                for(let [code, info] of Object.entries(data.bonusCodes)) {
-                    bonusHtml += `<tr><td><b>${code}</b></td><td>${info.coins}</td><td>${info.usedCount}</td></tr>`;
-                }
-                bonusHtml += `</table>`;
-                document.getElementById('adminBonusList').innerHTML = bonusHtml;
-
-                let usersHtml = `<table><tr><th>Username</th><th>Balance</th><th>Mining Rate</th></tr>`;
-                data.users.forEach(u => {
-                    usersHtml += `<tr><td>${u.username}</td><td>${Math.floor(u.balance)}</td><td>${u.miningRate}</td></tr>`;
-                });
-                usersHtml += `</table>`;
-                document.getElementById('adminUsersList').innerHTML = usersHtml;
-            }
-        }
-    </script>
-</body>
-</html>
