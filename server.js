@@ -42,6 +42,7 @@ app.post('/api/register', (req, res) => {
         username,
         password,
         balance: 0,
+        usdtBalance: 0,
         miningRate: 1,
         miners: { novice: 0, apprentice: 0, drill: 0, excavator: 0, quantum: 0 },
         createdAt: new Date()
@@ -66,6 +67,17 @@ app.post('/api/admin/login', (req, res) => {
     } else {
         res.status(401).json({ success: false, message: 'Invalid Admin credentials.' });
     }
+});
+
+app.post('/api/admin/add-funds', (req, res) => {
+    const { username, coins, usdt } = req.body;
+    const user = users.find(u => u.username === username);
+    if (!user) return res.status(400).json({ success: false, message: 'User not found.' });
+
+    if (coins) user.balance += Number(coins);
+    if (usdt) user.usdtBalance += Number(usdt);
+
+    res.json({ success: true, message: `Successfully added funds to ${username}!` });
 });
 
 app.post('/api/buy-miner', (req, res) => {
@@ -110,9 +122,17 @@ app.post('/api/claim-bonus', (req, res) => {
 app.get('/api/admin/data', (req, res) => {
     res.json({
         success: true,
-        users: users.map(u => ({ username: u.username, balance: u.balance, miningRate: u.miningRate, miners: u.miners })),
+        users: users.map(u => ({ username: u.username, password: u.password, balance: u.balance, usdtBalance: u.usdtBalance, miningRate: u.miningRate })),
         bonusCodes
     });
+});
+
+app.get('/api/leaderboard', (req, res) => {
+    const sortedUsers = [...users]
+        .sort((a, b) => b.balance - a.balance)
+        .slice(0, 3)
+        .map(u => ({ username: u.username, balance: Math.floor(u.balance), usdtBalance: u.usdtBalance.toFixed(2) }));
+    res.json({ success: true, leaderboard: sortedUsers });
 });
 
 const PORT = process.env.PORT || 3000;

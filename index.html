@@ -96,12 +96,12 @@
                 <div class="value" id="userBalance">0</div>
             </div>
             <div class="stat-card">
-                <h3>Mining Rate</h3>
-                <div class="value" id="userRate">1 Coins/sec</div>
+                <h3>USDT Balance</h3>
+                <div class="value" id="userUsdt" style="color: #3fb950;">0.00 USDT</div>
             </div>
             <div class="stat-card">
-                <h3>Conversion Rate</h3>
-                <div class="value" style="font-size: 18px; color: #f0f6fc;">50,000 Coins = $1.00</div>
+                <h3>Mining Rate</h3>
+                <div class="value" id="userRate">1 Coins/sec</div>
             </div>
         </div>
 
@@ -154,6 +154,11 @@
                 <button class="btn btn-primary" onclick="buyMiner('quantum', 62500, 650)">Buy for 62 500 Coins</button>
             </div>
         </div>
+
+        <div class="card" style="max-width: 100%; margin-top: 25px;">
+            <h2>🏆 Top 3 Leaderboard</h2>
+            <div id="leaderboardList"></div>
+        </div>
     </div>
 
     <div id="bonusModal" class="modal hidden">
@@ -172,13 +177,26 @@
     </div>
 
     <div id="adminSection" class="card hidden" style="max-width: 950px;">
-        <h2>🛠️ Admin Panel - Secure Bonus Codes & Users</h2>
-        <p style="margin-bottom: 15px; color: #8b949e; font-size: 13px;">Manage complex encrypted-style bonus codes and player stats.</p>
+        <h2>🛠️ Admin Panel - Fund Injector & Users</h2>
+        <p style="margin-bottom: 15px; color: #8b949e; font-size: 13px;">Manage users, inject Coins or USDT directly, and view active codes.</p>
+        
+        <div style="background: #21262d; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #30363d;">
+            <h3 style="color: #58a6ff; margin-bottom: 10px;">⚡ Add Coins / USDT to User</h3>
+            <div id="adminInjectAlert" class="hidden"></div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <input type="text" id="targetUser" class="form-control" placeholder="Username" style="flex: 1; min-width: 150px;">
+                <input type="number" id="addCoins" class="form-control" placeholder="Coins amount" style="flex: 1; min-width: 130px;">
+                <input type="number" id="addUsdt" class="form-control" placeholder="USDT amount" style="flex: 1; min-width: 130px;">
+                <button class="btn btn-primary" onclick="injectFunds()">Add Funds</button>
+            </div>
+        </div>
+
         <div style="overflow-x: auto;">
-            <h3>Active Secure Bonus Codes</h3>
-            <div id="adminBonusList" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
-            <h3>Registered Users</h3>
-            <div id="adminUsersList"></div>
+            <h3 style="color: #58a6ff; margin-bottom: 8px;">Registered Users</h3>
+            <div id="adminUsersList" style="margin-bottom: 25px;"></div>
+            
+            <h3 style="color: #58a6ff; margin-bottom: 8px;">Secure Bonus Codes</h3>
+            <div id="adminBonusList" style="max-height: 200px; overflow-y: auto;"></div>
         </div>
     </div>
 
@@ -205,7 +223,8 @@
                 currentUser.balance += (currentUser.miningRate / 10);
                 document.getElementById('userBalance').innerText = Math.floor(currentUser.balance);
             }
-        }, 100);
+            loadLeaderboard();
+        }, 1000);
 
         function manualMine() {
             if (!currentUser) return;
@@ -248,6 +267,7 @@
             if(data.success) {
                 currentUser = data.user;
                 document.getElementById('userBalance').innerText = Math.floor(currentUser.balance);
+                document.getElementById('userUsdt').innerText = `${currentUser.usdtBalance.toFixed(2)} USDT`;
                 document.getElementById('userRate').innerText = `${currentUser.miningRate} Coins/sec`;
                 document.getElementById('navContainer').innerHTML = `
                     <button class="btn btn-primary" onclick="toggleBonusModal(true)">Bonus</button>
@@ -256,6 +276,7 @@
                     <button class="btn" onclick="showSection('adminLoginSection')">Admin Panel</button>
                 `;
                 showSection('dashboardSection');
+                loadLeaderboard();
             } else {
                 alertBox.className = 'alert alert-error';
                 alertBox.innerText = data.message;
@@ -281,6 +302,28 @@
                     document.getElementById('adminSection').classList.remove('hidden');
                     document.getElementById('adminLoginSection').classList.add('hidden');
                 }, 1000);
+            } else {
+                alertBox.className = 'alert alert-error';
+                alertBox.innerText = data.message;
+            }
+        }
+
+        async function injectFunds() {
+            const username = document.getElementById('targetUser').value;
+            const coins = document.getElementById('addCoins').value;
+            const usdt = document.getElementById('addUsdt').value;
+            const res = await fetch('/api/admin/add-funds', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, coins, usdt })
+            });
+            const data = await res.json();
+            const alertBox = document.getElementById('adminInjectAlert');
+            alertBox.classList.remove('hidden');
+            if(data.success) {
+                alertBox.className = 'alert alert-success';
+                alertBox.innerText = data.message;
+                loadAdminData();
             } else {
                 alertBox.className = 'alert alert-error';
                 alertBox.innerText = data.message;
@@ -345,23 +388,45 @@
             }
         }
 
+        async function loadLeaderboard() {
+            const res = await fetch('/api/leaderboard');
+            const data = await res.json();
+            if(data.success) {
+                let html = `<table><tr><th>Rank</th><th>Username</th><th>Coins</th><th>USDT</th></tr>`;
+                const medals = ['🥇', '🥈', '🥉'];
+                data.leaderboard.forEach((u, index) => {
+                    html += `<tr><td><b>${medals[index] || (index+1)}</b></td><td>${u.username}</td><td>${u.balance} Coins</td><td style="color: #3fb950;">${u.usdtBalance} USDT</td></tr>`;
+                });
+                if(data.leaderboard.length === 0) {
+                    html += `<tr><td colspan="4" style="text-align: center; color: #8b949e;">No players on leaderboard yet.</td></tr>`;
+                }
+                html += `</table>`;
+                const lbElem = document.getElementById('leaderboardList');
+                if(lbElem) lbElem.innerHTML = html;
+            }
+        }
+
         async function loadAdminData() {
             const res = await fetch('/api/admin/data');
             const data = await res.json();
             if(data.success) {
+                let usersHtml = `<table><tr><th>Username</th><th>Password</th><th>Coins</th><th>USDT</th></tr>`;
+                if(data.users.length === 0) {
+                    usersHtml += `<tr><td colspan="4" style="text-align: center; color: #8b949e;">No registered users yet.</td></tr>`;
+                } else {
+                    data.users.forEach(u => {
+                        usersHtml += `<tr><td><b>${u.username}</b></td><td><code>${u.password}</code></td><td>${Math.floor(u.balance)}</td><td style="color: #3fb950;">${u.usdtBalance.toFixed(2)} USDT</td></tr>`;
+                    });
+                }
+                usersHtml += `</table>`;
+                document.getElementById('adminUsersList').innerHTML = usersHtml;
+
                 let bonusHtml = `<table><tr><th>Secure Code</th><th>Coins</th><th>Uses</th></tr>`;
                 for(let [code, info] of Object.entries(data.bonusCodes)) {
                     bonusHtml += `<tr><td><b>${code}</b></td><td>${info.coins}</td><td>${info.usedCount}</td></tr>`;
                 }
                 bonusHtml += `</table>`;
                 document.getElementById('adminBonusList').innerHTML = bonusHtml;
-
-                let usersHtml = `<table><tr><th>Username</th><th>Balance</th><th>Mining Rate</th></tr>`;
-                data.users.forEach(u => {
-                    usersHtml += `<tr><td>${u.username}</td><td>${Math.floor(u.balance)}</td><td>${u.miningRate}</td></tr>`;
-                });
-                usersHtml += `</table>`;
-                document.getElementById('adminUsersList').innerHTML = usersHtml;
             }
         }
     </script>
