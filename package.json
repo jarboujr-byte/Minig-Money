@@ -1,7 +1,7 @@
 {
   "name": "minecoins-portal",
   "version": "1.0.0",
-  "description": "MineCoins Web Portal Application with Persistent Database",
+  "description": "MineCoins Web Portal Application",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

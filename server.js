@@ -9,7 +9,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const DATA_FILE = path.join(__dirname, 'data.json');
 
-// Load persistent data
 let data = { users: [], bonusCodes: {} };
 
 if (fs.existsSync(DATA_FILE)) {
@@ -21,7 +20,6 @@ if (fs.existsSync(DATA_FILE)) {
     }
 }
 
-// Generate bonus codes if not existing
 if (!data.bonusCodes || Object.keys(data.bonusCodes).length === 0) {
     data.bonusCodes = {};
     for (let i = 1; i <= 40; i++) {
@@ -188,5 +186,5 @@ app.get('/api/leaderboard', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT});
 });
