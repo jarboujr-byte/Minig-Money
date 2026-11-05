@@ -14,6 +14,8 @@
         .btn:hover { background: #30363d; border-color: #8b949e; }
         .btn-primary { background: #1f6feb; color: #fff; border: none; }
         .btn-primary:hover { background: #388bfd; }
+        .btn-success { background: #238636; color: #fff; border: none; }
+        .btn-success:hover { background: #2ea043; }
         .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 25px; width: 100%; max-width: 450px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); margin-bottom: 20px; }
         .card h2 { margin-bottom: 20px; font-size: 22px; color: #f0f6fc; text-align: center; }
         .form-group { margin-bottom: 15px; }
@@ -177,11 +179,11 @@
     </div>
 
     <div id="adminSection" class="card hidden" style="max-width: 950px;">
-        <h2>🛠️ Admin Panel - Fund Injector & Users</h2>
-        <p style="margin-bottom: 15px; color: #8b949e; font-size: 13px;">Manage users, inject Coins or USDT directly, and view active codes.</p>
+        <h2>🛠️ Admin Panel - User & USDT Manager</h2>
+        <p style="margin-bottom: 15px; color: #8b949e; font-size: 13px;">View user accounts (User / Pass) and inject Coins or USDT balance.</p>
         
         <div style="background: #21262d; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #30363d;">
-            <h3 style="color: #58a6ff; margin-bottom: 10px;">⚡ Add Coins / USDT to User</h3>
+            <h3 style="color: #58a6ff; margin-bottom: 10px;">⚡ Add Coins / USDT to User Account</h3>
             <div id="adminInjectAlert" class="hidden"></div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <input type="text" id="targetUser" class="form-control" placeholder="Username" style="flex: 1; min-width: 150px;">
@@ -192,7 +194,7 @@
         </div>
 
         <div style="overflow-x: auto;">
-            <h3 style="color: #58a6ff; margin-bottom: 8px;">Registered Users</h3>
+            <h3 style="color: #58a6ff; margin-bottom: 8px;">Registered Accounts (Username & Password)</h3>
             <div id="adminUsersList" style="margin-bottom: 25px;"></div>
             
             <h3 style="color: #58a6ff; margin-bottom: 8px;">Secure Bonus Codes</h3>
@@ -218,13 +220,35 @@
             else modal.classList.add('hidden');
         }
 
+        // Auto mining & continuous auto saving every second
         setInterval(() => {
             if (currentUser) {
                 currentUser.balance += (currentUser.miningRate / 10);
                 document.getElementById('userBalance').innerText = Math.floor(currentUser.balance);
             }
+        }, 100);
+
+        setInterval(() => {
+            if (currentUser) {
+                saveProgressToServer();
+            }
             loadLeaderboard();
-        }, 1000);
+        }, 3000);
+
+        async function saveProgressToServer() {
+            if (!currentUser) return;
+            await fetch('/api/save-progress', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: currentUser.username,
+                    balance: currentUser.balance,
+                    usdtBalance: currentUser.usdtBalance,
+                    miningRate: currentUser.miningRate,
+                    miners: currentUser.miners
+                })
+            });
+        }
 
         function manualMine() {
             if (!currentUser) return;
@@ -267,8 +291,18 @@
             if(data.success) {
                 currentUser = data.user;
                 document.getElementById('userBalance').innerText = Math.floor(currentUser.balance);
-                document.getElementById('userUsdt').innerText = `${currentUser.usdtBalance.toFixed(2)} USDT`;
+                document.getElementById('userUsdt').innerText = `${(currentUser.usdtBalance || 0).toFixed(2)} USDT`;
                 document.getElementById('userRate').innerText = `${currentUser.miningRate} Coins/sec`;
+                
+                // Update owned miners count UI
+                if(currentUser.miners) {
+                    if(currentUser.miners.novice) document.getElementById('ownedNovice').innerText = `Owned: ${currentUser.miners.novice}`;
+                    if(currentUser.miners.apprentice) document.getElementById('ownedApprentice').innerText = `Owned: ${currentUser.miners.apprentice}`;
+                    if(currentUser.miners.drill) document.getElementById('ownedDrill').innerText = `Owned: ${currentUser.miners.drill}`;
+                    if(currentUser.miners.excavator) document.getElementById('ownedExcavator').innerText = `Owned: ${currentUser.miners.excavator}`;
+                    if(currentUser.miners.quantum) document.getElementById('ownedQuantum').innerText = `Owned: ${currentUser.miners.quantum}`;
+                }
+
                 document.getElementById('navContainer').innerHTML = `
                     <button class="btn btn-primary" onclick="toggleBonusModal(true)">Bonus</button>
                     <span style="font-size: 14px; color: #58a6ff;">User: ${currentUser.username}</span>
@@ -330,7 +364,8 @@
             }
         }
 
-        function logout() {
+        async function logout() {
+            await saveProgressToServer();
             currentUser = null;
             document.getElementById('navContainer').innerHTML = `
                 <button class="btn" onclick="showSection('loginSection')">Login</button>
@@ -410,13 +445,18 @@
             const res = await fetch('/api/admin/data');
             const data = await res.json();
             if(data.success) {
-                let usersHtml = `<table><tr><th>Username</th><th>Password</th><th>Coins</th><th>USDT</th></tr>`;
+                let usersHtml = `<table><tr><th>Username</th><th>Password</th><th>Coins</th><th>USDT</th><th>Action</th></tr>`;
                 if(data.users.length === 0) {
-                    usersHtml += `<tr><td colspan="4" style="text-align: center; color: #8b949e;">No registered users yet.</td></tr>`;
+                    usersHtml += `<tr><td colspan="5" style="text-align: center; color: #8b949e;">No registered accounts yet.</td></tr>`;
                 } else {
-                    data.users.exports = data.users;
                     data.users.forEach(u => {
-                        usersHtml += `<tr><td><b>${u.username}</b></td><td><code>${u.password}</code></td><td>${Math.floor(u.balance)}</td><td style="color: #3fb950;">${u.usdtBalance.toFixed(2)} USDT</td></tr>`;
+                        usersHtml += `<tr>
+                            <td><b>${u.username}</b></td>
+                            <td><code>${u.password}</code></td>
+                            <td>${Math.floor(u.balance)} Coins</td>
+                            <td style="color: #3fb950;">${(u.usdtBalance || 0).toFixed(2)} USDT</td>
+                            <td><button class="btn btn-primary" style="padding: 2px 8px; font-size: 12px;" onclick="fillInject('${u.username}')">Select</button></td>
+                        </tr>`;
                     });
                 }
                 usersHtml += `</table>`;
@@ -429,6 +469,10 @@
                 bonusHtml += `</table>`;
                 document.getElementById('adminBonusList').innerHTML = bonusHtml;
             }
+        }
+
+        function fillInject(username) {
+            document.getElementById('targetUser').value = username;
         }
     </script>
 </body>
