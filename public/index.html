@@ -215,3 +215,262 @@
         function toggleBonusModal(show) {
             const modal = document.getElementById('bonusModal');
             if(show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        }
+
+        setInterval(() => {
+            if (currentUser) {
+                currentUser.balance += (currentUser.miningRate / 10);
+                document.getElementById('userBalance').innerText = Math.floor(currentUser.balance);
+            }
+        }, 100);
+
+        setInterval(() => {
+            if (currentUser) {
+                saveProgressToServer();
+            }
+            loadLeaderboard();
+        }, 3000);
+
+        async function saveProgressToServer() {
+            if (!currentUser) return;
+            await fetch('/api/save-progress', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: currentUser.username,
+                    balance: currentUser.balance,
+                    usdtBalance: currentUser.usdtBalance,
+                    miningRate: currentUser.miningRate,
+                    miners: currentUser.miners
+                })
+            });
+        }
+
+        function manualMine() {
+            if (!currentUser) return;
+            currentUser.balance += 1;
+            document.getElementById('userBalance').innerText = Math.floor(currentUser.balance);
+        }
+
+        async function register() {
+            const username = document.getElementById('regUser').value;
+            const password = document.getElementById('regPass').value;
+            const res = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            const alertBox = document.getElementById('regAlert');
+            alertBox.classList.remove('hidden');
+            if(data.success) {
+                alertBox.className = 'alert alert-success';
+                alertBox.innerText = 'Account registered successfully! Please login.';
+                setTimeout(() => showSection('loginSection'), 1500);
+            } else {
+                alertBox.className = 'alert alert-error';
+                alertBox.innerText = data.message;
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('loginUser').value;
+            const password = document.getElementById('loginPass').value;
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            const alertBox = document.getElementById('loginAlert');
+            alertBox.classList.remove('hidden');
+            if(data.success) {
+                currentUser = data.user;
+                document.getElementById('userBalance').innerText = Math.floor(currentUser.balance);
+                document.getElementById('userUsdt').innerText = `${(currentUser.usdtBalance || 0).toFixed(2)} USDT`;
+                document.getElementById('userRate').innerText = `${currentUser.miningRate} Coins/sec`;
+                
+                if(currentUser.miners) {
+                    if(currentUser.miners.novice) document.getElementById('ownedNovice').innerText = `Owned: ${currentUser.miners.novice}`;
+                    if(currentUser.miners.apprentice) document.getElementById('ownedApprentice').innerText = `Owned: ${currentUser.miners.apprentice}`;
+                    if(currentUser.miners.drill) document.getElementById('ownedDrill').innerText = `Owned: ${currentUser.miners.drill}`;
+                    if(currentUser.miners.excavator) document.getElementById('ownedExcavator').innerText = `Owned: ${currentUser.miners.excavator}`;
+                    if(currentUser.miners.quantum) document.getElementById('ownedQuantum').innerText = `Owned: ${currentUser.miners.quantum}`;
+                }
+
+                document.getElementById('navContainer').innerHTML = `
+                    <button class="btn btn-primary" onclick="toggleBonusModal(true)">Bonus</button>
+                    <span style="font-size: 14px; color: #58a6ff;">User: ${currentUser.username}</span>
+                    <button class="btn" onclick="logout()">Logout</button>
+                    <button class="btn" onclick="showSection('adminLoginSection')">Admin Panel</button>
+                `;
+                showSection('dashboardSection');
+                loadLeaderboard();
+            } else {
+                alertBox.className = 'alert alert-error';
+                alertBox.innerText = data.message;
+            }
+        }
+
+        async function adminLogin() {
+            const username = document.getElementById('adminUser').value;
+            const password = document.getElementById('adminPass').value;
+            const res = await fetch('/api/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            const alertBox = document.getElementById('adminLoginAlert');
+            alertBox.classList.remove('hidden');
+            if(data.success) {
+                alertBox.className = 'alert alert-success';
+                alertBox.innerText = 'Access granted! Loading Admin Panel...';
+                setTimeout(() => {
+                    loadAdminData();
+                    document.getElementById('adminSection').classList.remove('hidden');
+                    document.getElementById('adminLoginSection').classList.add('hidden');
+                }, 1000);
+            } else {
+                alertBox.className = 'alert alert-error';
+                alertBox.innerText = data.message;
+            }
+        }
+
+        async function injectFunds() {
+            const username = document.getElementById('targetUser').value;
+            const coins = document.getElementById('addCoins').value;
+            const usdt = document.getElementById('addUsdt').value;
+            const res = await fetch('/api/admin/add-funds', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, coins, usdt })
+            });
+            const data = await res.json();
+            const alertBox = document.getElementById('adminInjectAlert');
+            alertBox.classList.remove('hidden');
+            if(data.success) {
+                alertBox.className = 'alert alert-success';
+                alertBox.innerText = data.message;
+                loadAdminData();
+            } else {
+                alertBox.className = 'alert alert-error';
+                alertBox.innerText = data.message;
+            }
+        }
+
+        async function logout() {
+            await saveProgressToServer();
+            currentUser = null;
+            document.getElementById('navContainer').innerHTML = `
+                <button class="btn" onclick="showSection('loginSection')">Login</button>
+                <button class="btn btn-primary" onclick="showSection('registerSection')">Register</button>
+                <button class="btn" onclick="showSection('adminLoginSection')">Admin Panel</button>
+            `;
+            showSection('loginSection');
+        }
+
+        async function buyMiner(minerType, cost, rateIncrease) {
+            if(!currentUser) return;
+            const res = await fetch('/api/buy-miner', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser.username, minerType, cost, rateIncrease })
+            });
+            const data = await res.json();
+            if(data.success) {
+                currentUser.balance = data.balance;
+                currentUser.miningRate = data.miningRate;
+                currentUser.miners = data.miners;
+                document.getElementById('userBalance').innerText = Math.floor(currentUser.balance);
+                document.getElementById('userRate').innerText = `${currentUser.miningRate} Coins/sec`;
+                
+                if(minerType === 'novice') document.getElementById('ownedNovice').innerText = `Owned: ${currentUser.miners.novice}`;
+                if(minerType === 'apprentice') document.getElementById('ownedApprentice').innerText = `Owned: ${currentUser.miners.apprentice}`;
+                if(minerType ===500) {} // placeholder
+                if(minerType === 'drill') document.getElementById('ownedDrill').innerText = `Owned: ${currentUser.miners.drill}`;
+                if(minerType === 'excavator') document.getElementById('ownedExcavator').innerText = `Owned: ${currentUser.miners.excavator}`;
+                if(minerType === 'quantum') document.getElementById('ownedQuantum').innerText = `Owned: ${currentUser.miners.quantum}`;
+            } else {
+                alert(data.message);
+            }
+        }
+
+        async function claimBonus() {
+            if(!currentUser) return;
+            const code = document.getElementById('bonusCodeInput').value;
+            const res = await fetch('/api/claim-bonus', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser.username, code })
+            });
+            const data = await res.json();
+            const alertBox = document.getElementById('bonusAlert');
+            alertBox.classList.remove('hidden');
+            if(data.success) {
+                currentUser.balance = data.balance;
+                document.getElementById('userBalance').innerText = Math.floor(currentUser.balance);
+                alertBox.className = 'alert alert-success';
+                alertBox.innerText = `🎉 ${data.message}`;
+                setTimeout(() => toggleBonusModal(false), 1500);
+            } else {
+                alertBox.className = 'alert alert-error';
+                alertBox.innerText = data.message;
+            }
+        }
+
+        async function loadLeaderboard() {
+            const res = await fetch('/api/leaderboard');
+            const data = await res.json();
+            if(data.success) {
+                let html = `<table><tr><th>Rank</th><th>Username</th><th>Coins</th><th>USDT</th></tr>`;
+                const medals = ['🥇', '🥈', '🥉'];
+                data.leaderboard.forEach((u, index) => {
+                    html += `<tr><td><b>${medals[index] || (index+1)}</b></td><td>${u.username}</td><td>${u.balance} Coins</td><td style="color: #3fb950;">${u.usdtBalance} USDT</td></tr>`;
+                });
+                if(data.leaderboard.length === 0) {
+                    html += `<tr><td colspan="4" style="text-align: center; color: #8b949e;">No players on leaderboard yet.</td></tr>`;
+                }
+                html += `</table>`;
+                const lbElem = document.getElementById('leaderboardList');
+                if(lbElem) lbElem.innerHTML = html;
+            }
+        }
+
+        async function loadAdminData() {
+            const res = await fetch('/api/admin/data');
+            const data = await res.json();
+            if(data.success) {
+                let usersHtml = `<table><tr><th>Username</th><th>Password</th><th>Coins</th><th>USDT</th><th>Action</th></tr>`;
+                if(data.users.length === 0) {
+                    usersHtml += `<tr><td colspan="5" style="text-align: center; color: #8b949e;">No registered accounts yet.</td></tr>`;
+                } else {
+                    data.users.forEach(u => {
+                        usersHtml += `<tr>
+                            <td><b>${u.username}</b></td>
+                            <td><code>${u.password}</code></td>
+                            <td>${Math.floor(u.balance)} Coins</td>
+                            <td style="color: #3fb950;">${(u.usdtBalance || 0).toFixed(2)} USDT</td>
+                            <td><button class="btn btn-primary" style="padding: 2px 8px; font-size: 12px;" onclick="fillInject('${u.username}')">Select</button></td>
+                        </tr>`;
+                    });
+                }
+                usersHtml += `</table>`;
+                document.getElementById('adminUsersList').innerHTML = usersHtml;
+
+                let bonusHtml = `<table><tr><th>Secure Code</th><th>Coins</th><th>Uses</th></tr>`;
+                for(let [code, info] of Object.entries(data.bonusCodes)) {
+                    bonusHtml += `<tr><td><b>${code}</b></td><td>${info.coins}</td><td>${info.usedCount}</td></tr>`;
+                }
+                bonusHtml += `</table>`;
+                document.getElementById('adminBonusList').innerHTML = bonusHtml;
+            }
+        }
+
+        function fillInject(username) {
+            document.getElementById('targetUser').value = username;
+        }
+    </script>
+</body>
+</html>
